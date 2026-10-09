@@ -22,6 +22,14 @@ class TestBrand(unittest.TestCase):
         self.assertEqual(len(self.profile["rubrics"]), 3)
         self.assertEqual(self.profile["video"]["video_aspect"], "9:16")
 
+    def test_short_video_length_limits_script_and_plan(self):
+        profile = brand.load_profile(str(ROOT / "brand.travel.example.toml"))
+        prompt = brand.build_script_prompt(profile, {"subject": "s"})
+        self.assertIn("10 секунд", prompt)
+        self.assertIn("не больше 25 слов", prompt)
+        self.assertIn("до 10 секунд", brand.build_plan_prompt(profile, 5))
+        self.assertIn("30–60 секунд", brand.build_plan_prompt(self.profile, 3))
+
     def test_missing_required_field_is_rejected(self):
         with self.assertRaises(ValueError):
             brand.normalize_profile({"brand": {"niche": "x", "audience": "y"}})

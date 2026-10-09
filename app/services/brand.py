@@ -19,6 +19,8 @@ MAX_PLAN_COUNT = 30
 # brief has to fit alongside the per-topic hook.
 MAX_SCRIPT_PROMPT_LENGTH = 2000
 MAX_EXAMPLE_TEXT_LENGTH = 400
+# Edge TTS reads Russian at roughly 2.5 words per second.
+WORDS_PER_SECOND = 2.5
 
 DEFAULT_VIDEO = {
     "voice_name": "ru-RU-SvetlanaNeural-Female",
@@ -44,6 +46,7 @@ def normalize_profile(data: dict) -> dict:
     brand.setdefault("name", "")
     brand.setdefault("language", "ru-RU")
     brand["posts_per_week"] = int(brand.get("posts_per_week") or 3)
+    brand["video_seconds"] = int(brand.get("video_seconds") or 0)
     brand["stop_words"] = [str(w) for w in brand.get("stop_words") or []]
     brand["example_texts"] = [str(t) for t in brand.get("example_texts") or []]
 
@@ -77,6 +80,12 @@ def build_brand_brief(profile: dict) -> str:
         "- Первая фраза должна цеплять за 3 секунды; в конце один короткий призыв "
         "(сохранить, написать в комментариях или подписаться)."
     )
+    if brand["video_seconds"]:
+        words = max(5, int(brand["video_seconds"] * WORDS_PER_SECOND))
+        lines.append(
+            f"- Длина: ролик на {brand['video_seconds']} секунд, "
+            f"не больше {words} слов, одна мысль без вступления."
+        )
     if brand["stop_words"]:
         lines.append(f"- Не используй: {', '.join(brand['stop_words'])}")
     for text in brand["example_texts"]:
@@ -103,7 +112,12 @@ def build_plan_prompt(profile: dict, count: int) -> str:
         f"- {r['name']}: {r['description']}" if r["description"] else f"- {r['name']}"
         for r in profile["rubrics"]
     )
-    return f"""Ты контент-стратег личного бренда. Составь контент-план из {count} коротких вертикальных видео (30–60 секунд).
+    length = (
+        f"до {brand['video_seconds']} секунд"
+        if brand["video_seconds"]
+        else "30–60 секунд"
+    )
+    return f"""Ты контент-стратег личного бренда. Составь контент-план из {count} коротких вертикальных видео ({length}).
 
 Ниша: {brand['niche']}
 Аудитория: {brand['audience']}
