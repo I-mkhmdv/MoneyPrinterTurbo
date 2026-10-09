@@ -1,5 +1,6 @@
 .DS_Store
 /config.toml
+/brand.toml
 /config.toml.bak
 /storage/
 /.idea/
