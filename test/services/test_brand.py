@@ -24,6 +24,8 @@ class TestBrand(unittest.TestCase):
 
     def test_short_video_length_limits_script_and_plan(self):
         profile = brand.load_profile(str(ROOT / "brand.travel.example.toml"))
+        self.assertEqual(profile["brand"]["video_seconds"], 0)
+        profile["brand"]["video_seconds"] = 10
         prompt = brand.build_script_prompt(profile, {"subject": "s"})
         self.assertIn("10 секунд", prompt)
         self.assertIn("не больше 25 слов", prompt)
